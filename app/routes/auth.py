@@ -43,7 +43,7 @@ def login():
     if not bcrypt.check_password_hash(user.password, data["password"]):
         return jsonify({"message": "Invalid credentials"}), 401
 
-    access_token = create_access_token(identity=user.id)
+    access_token = create_access_token(identity=str(user.id))
 
     return jsonify(
         {"access_token": access_token,
@@ -56,7 +56,7 @@ def login():
 @auth_bp.route("/profile", methods=["Get"])
 @jwt_required()
 def profile():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = User.query.get(user_id)
 
     if not user:
@@ -75,7 +75,7 @@ def profile():
 @auth_bp.route("/profile", methods=["PUT"])
 @jwt_required()
 def update_profile():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     user = user.query.get(user_id)
 
     if not user:
