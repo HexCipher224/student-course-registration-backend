@@ -25,6 +25,8 @@ def create_app():
         url_prefix="/api/departments"
     )
 
+    app.register_blueprint(course_bp, url_prefix="/api/courses")
+
     @app.route("/")
     def home():
         return {
