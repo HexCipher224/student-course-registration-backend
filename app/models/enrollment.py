@@ -1,21 +1,26 @@
 from app.extensions import db
 
 
-class Course(db.Model):
-    __tablename__ = "courses"
+class Enrollment(db.Model):
+    __tablename__ = "enrollments"
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(150), nullable=False)
-    code = db.Column(db.String(20), nullable=False, unique=True)
-    credits = db.Column(db.Integer, nullable=False)
-    description = db.Column(db.Text)
 
-    department_id = db.Column(
+    semester = db.Column(db.String(50), nullable=False)
+    status = db.Column(db.String(20), default="Active")
+    enrolled_on = db.Column(db.Date, server_default=db.func.current_date())
+
+    user_id = db.Column(
         db.Integer,
-        db.ForeignKey("departments.id"),
+        db.ForeignKey("users.id"),
         nullable=False
     )
 
-    department = db.relationship("Department", back_populates="courses")
+    course_id = db.Column(
+        db.Integer,
+        db.ForeignKey("courses.id"),
+        nullable=False
+    )
 
-    enrollments = db.relationship("Enrollment", back_populates="course", cascade="all, delete-orphan")
+    user = db.relationship("User", back_populates="enrollments")
+    course = db.relationship("Course", back_populates="enrollments")
