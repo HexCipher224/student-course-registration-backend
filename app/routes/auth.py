@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.extensions import db, bcrypt
 from app.models.user import User
 
@@ -52,3 +52,41 @@ def login():
             "name": f"{user.first_name} {user.last_name}",
             "role": user.role
          }})
+
+@auth_bp.route("/profile", methods=["Get"])
+@jwt_required()
+def profile():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    return jsonify(
+        {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "role": user.role
+        }
+    ); 200
+
+@auth_bp.route("/profile", methods=["PUT"])
+@jwt_required()
+def update_profile():
+    user_id = get_jwt_identity()
+    user = user.query.get(user_id)
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    data = request.get_json()
+
+    user.first_name = data.get("first_name", user.first_name)
+    user.last_name = data.get("last_name", user.last_name)
+    user.email = data.get("email", user.email)
+
+    db.session.commit()
+
+    return jsonify({"message": "Profile updated successfully"}), 200
