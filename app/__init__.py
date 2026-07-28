@@ -16,15 +16,10 @@ def create_app():
     bcrypt.init_app(app)
     cors.init_app(app)
 
-    from .routes import auth_bp, department_bp 
+    from .routes import auth_bp, department_bp, course_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
-
-    app.register_blueprint(
-        department_bp,
-        url_prefix="/api/departments"
-    )
-
+    app.register_blueprint(department_bp, url_prefix="/api/departments")
     app.register_blueprint(course_bp, url_prefix="/api/courses")
 
     @app.route("/")
