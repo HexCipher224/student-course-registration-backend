@@ -2,8 +2,19 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from app.extensions import db
 from app.models.course import Course
+from app.models.user import User
 
 course_bp = Blueprint("courses", __name__)
+
+def admin_required():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user or user.role != "admin":
+        return False
+
+    return True
+
 
 #Get all courses
 @course_bp.route("/", methods=["GET"])
@@ -25,6 +36,10 @@ def get_courses():
 @course_bp.route("/", methods=["POST"])
 @jwt_required()
 def create_course():
+
+    if not admin_required():
+        return jsonify({"message": "Admin access required"}), 403
+
     data = request.get_json()
 
     course = Course(
@@ -57,6 +72,9 @@ def get_course(id):
 @course_bp.route("/<int:id>", methods=["PUT"])
 @jwt_required()
 def update_course(id):
+    if not admin_required():
+        return jsonify({"message": "Admin access required"}), 403
+    
     course = Course.query.get_or_404(id)
     data = request.get_json()
 
@@ -74,6 +92,9 @@ def update_course(id):
 @course_bp.route("/<int:id>", methods=["DELETE"])
 @jwt_required()
 def delete_course(id):
+    if not admin_required():
+        return jsonify({"message": "Admin access required"}), 403
+
     course = Course.query.get_or_404(id)
 
     db.session.delete(course)

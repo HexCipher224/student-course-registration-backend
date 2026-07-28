@@ -1,10 +1,20 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from app.extensions import db
 from app.models.department import Department
+from app.models.user import User
 
 department_bp = Blueprint("departments", __name__)
+
+def admin_required():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user or user.role != "admin":
+        return False
+
+    return True
 
 #GET all departments
 @department_bp.route("/", methods=["GET"])
@@ -35,6 +45,10 @@ def get_department(department_id):
 @department_bp.route("/", methods=["POST"])
 @jwt_required()
 def create_department():
+
+    if not admin_required():
+        return jsonify({"message": "Admin access required"}), 403
+    
     data = request.get_json()
 
     department = Department(
@@ -53,6 +67,10 @@ def create_department():
 @department_bp.route("/<int:id>", methods=["PUT"])
 @jwt_required()
 def update_department(id):
+
+    if not admin_required():
+        return jsonify({"message": "Admin access required"}), 403
+
     department = Department.query.get_or_404(id)
     data = request.get_json()
 
@@ -68,6 +86,10 @@ def update_department(id):
 @department_bp.route("/<int:id>", methods=["DELETE"])
 @jwt_required()
 def delete_department(id):
+    
+    if not admin_required():
+        return jsonify({"message": "Admin access required"}), 403
+
     department = Department.query.get_or_404(id)
 
     db.session.delete(department)
