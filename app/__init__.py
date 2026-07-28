@@ -1,6 +1,5 @@
 from flask import Flask
 
-from .routes import auth_bp
 from .config import Config
 from .extensions import db, jwt, bcrypt, cors
 from flask_migrate import Migrate
@@ -17,12 +16,16 @@ def create_app():
     bcrypt.init_app(app)
     cors.init_app(app)
 
+    from .routes import auth_bp
+
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+
     @app.route("/")
     def home():
         return {
             "message": "Student Course Registration API is running!"
         }
 
-    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+   
 
     return app
