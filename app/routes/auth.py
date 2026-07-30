@@ -9,16 +9,42 @@ auth_bp = Blueprint("auth", __name__)
 def register():
     data = request.get_json()
 
-    existing_user = User.query.filter_by(email=data["email"]).first()
+   
+    if not data:
+        return jsonify({"message": "Request body is required"}), 400
+
+    required_fields = [
+        "first_name",
+        "last_name",
+        "email",
+        "password"
+    ]
+
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({
+                "message": f"{field} is required"
+            }), 400
+
+    if len(data["password"]) < 8:
+        return jsonify({
+            "message": "Password must be at least 8 characters"
+        }), 400
+
+    existing_user = User.query.filter_by(
+        email=data["email"]
+    ).first()
 
     if existing_user:
-        return jsonify({"message": "User already exists"}), 400
+        return jsonify({
+            "message": "Email already exists"
+        }), 409
 
     hashed_password = bcrypt.generate_password_hash(
         data["password"]
     ).decode("utf-8")
 
-    new_user = User(
+    user = User(
         first_name=data["first_name"],
         last_name=data["last_name"],
         email=data["email"],
@@ -26,10 +52,12 @@ def register():
         role=data.get("role", "student")
     )
 
-    db.session.add(new_user)
-    db.session.commit() 
+    db.session.add(user)
+    db.session.commit()
 
-    return jsonify({"message": "User registered successfully"}), 201
+    return jsonify({
+        "message": "User registered successfully"
+    }), 201
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
