@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required
 from app.extensions import db
 from app.models.course import Course
 from app.models.user import User
+from app.models.department import Department
 
 course_bp = Blueprint("courses", __name__)
 
@@ -41,6 +42,40 @@ def create_course():
         return jsonify({"message": "Admin access required"}), 403
 
     data = request.get_json()
+
+    if not data:
+        return jsonify({"message": "Request body is required"}), 400
+
+    required_fields = [
+        "title",
+        "code",
+        "credits",
+        "description",
+        "department_id"
+    ]
+
+    for field in required_fields:
+        if data.get(field) is None:
+            return jsonify({
+                "message": f"{field} is required"
+            }), 400
+
+    existing_course = Course.query.filter_by(
+        code=data["code"]
+    ).first()
+
+    if existing_course:
+        return jsonify({
+            "message": "Course code already exists"
+        }), 409
+
+    department = Department.query.get(data["department_id"])
+
+    if not department:
+        return jsonify({
+            "message": "Department not found"
+        }), 404
+
 
     course = Course(
         title=data["title"],

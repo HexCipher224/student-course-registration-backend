@@ -48,8 +48,30 @@ def create_department():
 
     if not admin_required():
         return jsonify({"message": "Admin access required"}), 403
-    
+
     data = request.get_json()
+
+
+    if not data:
+        return jsonify({"message": "Request body is required"}), 400
+
+    required_fields = ["name", "code", "description"]
+
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({
+                "message": f"{field} is required"
+            }), 400
+
+    existing_department = Department.query.filter_by(
+        code=data["code"]
+    ).first()
+
+    if existing_department:
+        return jsonify({
+            "message": "Department code already exists"
+        }), 409
+
 
     department = Department(
         name=data["name"],
@@ -86,7 +108,7 @@ def update_department(id):
 @department_bp.route("/<int:id>", methods=["DELETE"])
 @jwt_required()
 def delete_department(id):
-    
+
     if not admin_required():
         return jsonify({"message": "Admin access required"}), 403
 

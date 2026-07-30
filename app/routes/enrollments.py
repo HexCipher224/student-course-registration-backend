@@ -1,7 +1,11 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
+
 from app.extensions import db
 from app.models.enrollment import Enrollment
+from app.models.course import Course
+from app.models.user import User
+
 
 enrollment_bp = Blueprint("enrollments", __name__)
 
@@ -26,6 +30,42 @@ def get_enrollments():
 def create_enrollment():
     data = request.get_json()
 
+    if not data:
+        return jsonify({"message": "No input data provided"}), 400
+
+    required_fields = [
+        "user_id",
+        "course_id",
+        "semester"
+    ]
+
+    for field in required_fields:
+        if data.get(field) is None:
+            return jsonify({
+                "message": f"{field} is required"
+                }), 400
+
+    user = User.query.get(data["user_id"])
+
+    if not user:
+        return jsonify({"message": "User not found"}), 404
+
+    course = Course.query.get(data["course_id"])
+
+    if not course:
+        return jsonify({"message": "Course not found"}), 404
+
+    existing = Enrollment.query.filter_by(
+        user_id=data["user_id"],
+        course_id=data["course_id"],
+        semester=data["semester"]
+    ).first()
+
+    if existing:
+        return jsonify({
+            "message": "Student is already enrolled in this "
+        }), 409
+        
     enrollment = Enrollment(
         user_id=data["user_id"],
         course_id=data["course_id"],
