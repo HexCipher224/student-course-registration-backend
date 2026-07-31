@@ -11,6 +11,8 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
+    with app.app_context():
+        db.create_all()
     migrate = Migrate(app, db)
     jwt.init_app(app)
     bcrypt.init_app(app)
