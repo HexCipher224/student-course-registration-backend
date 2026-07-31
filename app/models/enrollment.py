@@ -1,23 +1,63 @@
-from app.models.enrollment import Enrollment
+from app.extensions import db
 
-@course_bp.route("/<int:id>", methods=["DELETE"])
-@jwt_required()
-def delete_course(id):
-    if not admin_required():
-        return jsonify({"message": "Admin access required"}), 403
 
-    course = Course.query.get_or_404(id)
+class Enrollment(db.Model):
+    __tablename__ = "enrollments"
 
-    enrollment = Enrollment.query.filter_by(course_id=id).first()
+    id = db.Column(db.Integer, primary_key=True)
 
-    if enrollment:
-        return jsonify({
-            "message": "Cannot delete course because students are enrolled."
-        }), 400
+    semester = db.Column(db.String(50), nullable=False)
 
-    db.session.delete(course)
-    db.session.commit()
+    status = db.Column(
+        db.String(20),
+        default="Active",
+        nullable=False
+    )
 
-    return jsonify({
-        "message": "Course deleted successfully"
-    }), 200
+    enrolled_on = db.Column(
+        db.Date,
+        server_default=db.func.current_date()
+    )
+
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id"),
+        nullable=False
+    )
+
+    course_id = db.Column(
+        db.Integer,
+        db.ForeignKey("courses.id"),
+        nullable=False
+    )
+
+    user = db.relationship(
+        "User",
+        back_populates="enrollments"
+    )
+
+    course = db.relationship(
+        "Course",
+        back_populates="enrollments"
+    )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "semester": self.semester,
+            "status": self.status,
+            "enrolled_on": (
+                self.enrolled_on.isoformat()
+                if self.enrolled_on
+                else None
+            ),
+            "user_id": self.user_id,
+            "course_id": self.course_id,
+        }
+
+    def __repr__(self):
+        return (
+            f"<Enrollment {self.id} - "
+            f"User {self.user_id} - "
+            f"Course {self.course_id}>"
+        )

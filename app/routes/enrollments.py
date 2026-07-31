@@ -16,13 +16,16 @@ def get_enrollments():
 
     return jsonify([
         {
-            "id": enrollment.id,
+           "id": enrollment.id,
             "user_id": enrollment.user_id,
+            "user_name": enrollment.user.username if hasattr(enrollment, "user") and enrollment.user else None,
             "course_id": enrollment.course_id,
+            "course_title": enrollment.course.title if hasattr(enrollment, "course") and enrollment.course else None,
+            "semester": enrollment.semester,
             "status": enrollment.status
         }
         for enrollment in enrollments
-    ])
+    ]), 200
 
 #Create an enrollment
 @enrollment_bp.route("/", methods=["POST"])
