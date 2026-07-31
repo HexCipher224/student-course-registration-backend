@@ -4,7 +4,7 @@ from .config import Config
 from .extensions import db, jwt, bcrypt, cors
 from flask_migrate import Migrate
 from .models import User, Department, Course, Enrollment
-from .routes.seed import seed_db 
+from .routes.seed import seed_bp
 
 def create_app():
     app = Flask(__name__)
